@@ -1,0 +1,27 @@
+[
+  {
+    "name": "機械鍵盤",
+    "price": 2500,
+    "stock": 5
+  },
+  {
+    "name": "濾掛咖啡",
+    "price": 35,
+    "stock": 100
+  },
+  {
+    "name": "降噪耳機",
+    "price": 5800,
+    "stock": 2
+  },
+  {
+    "name": "PX5",
+    "price": 15800,
+    "stock": 0
+  },
+  {
+    "name": "switch8",
+    "price": 17777,
+    "stock": 19
+  }
+]
