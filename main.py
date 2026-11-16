@@ -15,7 +15,7 @@ class ProductCreate(BaseModel):
 
 def load_inventory():
     try:
-        with open("inventory.json","r",encoding="utf-8")as f:
+        with open(DATA_FILE,"r",encoding="utf-8")as f:
             return json.load(f)
     except FileNotFoundError:
         return[
@@ -25,7 +25,7 @@ def load_inventory():
         ]
 
 def save_inventory(data):
-    with open("inventory.json","w",encoding="utf-8") as f:
+    with open(DATA_FILE,"w",encoding="utf-8") as f:
         json.dump(data,f,ensure_ascii=False,indent=2)
 # 3. 用 @app.get("/") 裝飾器綁定根目錄路由，定義函式回傳包含歡迎訊息的字典
 @app.get("/")
@@ -49,7 +49,17 @@ def get_low_stock():
         "count":len(low_items),
         "items":low_items,
     }
+    
+@app.get("/products/summary")
+def get_products_summary():
+    items = load_inventory()
+    return{
+        "total_products" :len(items),
+        "total_stock_units":sum(item["stock"]for item in items),
+        "total_inventory_value": sum(item["price"]*item["stock"] for item in items),
+    }
 
+    
 @app.get("/products/{product_name}")
 def get_product_by_name(product_name:str):
     items = load_inventory()
@@ -86,7 +96,7 @@ def get_product_quote(product_name:str, qty:int = 1):
         "total_price":total_price
     }
     
-@app.post("/products")
+@app.post("/products",status_code=201)
 def create_product(new_product:ProductCreate):
     items = load_inventory()
     
@@ -99,3 +109,26 @@ def create_product(new_product:ProductCreate):
     save_inventory(items)
     
     return{"message":"商品新增成功","product":product_dict}
+
+@app.put("/products/{product_name}")
+def update_product(product_name:str, updated_product: ProductUpdate):
+    items = load_inventory()
+    
+    for item in items:
+        if item["name"].lower() == product_name.lower():
+            item["price"] = update_product.price
+            item["stock"] = update_product.stock
+            save_inventory(items)
+            return {"message":"商品更新成功", "product":item}
+        
+    raise HTTPException(status_code=404, detail="查無此商品無法更新")
+        
+@app.delete("/products/{product_name}")
+def delete_product(product_name: str):
+    items = load_inventory()
+    for item in items:
+        if item["name"].lower() == product_name.lower():
+            items.remove(item)
+            save_inventory(items)
+            return {"message": f"商品 {product_name} 已成功下架刪除"}
+    raise HTTPException(status_code=404, detail="查無此商品無法刪除")
